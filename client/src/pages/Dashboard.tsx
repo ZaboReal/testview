@@ -6,15 +6,23 @@ import StatsOverview from "@/components/StatsOverview";
 import SearchFilter from "@/components/SearchFilter";
 import QueryResultCard from "@/components/QueryResultCard";
 import ThemeToggle from "@/components/ThemeToggle";
+import { loadHardcodedData } from "@/data/testResults";
 
 export default function Dashboard() {
   const [testResults, setTestResults] = useState<TestResults | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Load hardcoded data on mount
   useEffect(() => {
-    fetch('/attached_assets/test_results_20251006_181847_1759798411344.json')
-      .then(res => res.json())
-      .then(data => setTestResults(data as TestResults))
-      .catch(err => console.error('Failed to load test results:', err));
+    loadHardcodedData()
+      .then(data => {
+        setTestResults(data);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load hardcoded data:', err);
+        setIsLoading(false);
+      });
   }, []);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState(["all"]);
@@ -55,6 +63,16 @@ export default function Dashboard() {
     });
   }, [testResults, searchQuery, statusFilter]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-pulse text-lg text-muted-foreground">Loading test results...</div>
+        </div>
+      </div>
+    );
+  }
+
   if (!testResults) {
     return (
       <div className="min-h-screen bg-background">
@@ -72,9 +90,28 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-8">
-        <div className="flex justify-between items-start gap-4">
+        <div className="flex justify-between items-start gap-4 flex-wrap">
           <TestRunHeader testRun={testResults.test_run} />
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => document.getElementById('file-upload-input')?.click()}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="button-upload-new"
+            >
+              Upload New File
+            </button>
+            <input
+              id="file-upload-input"
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileSelect(file);
+              }}
+            />
+            <ThemeToggle />
+          </div>
         </div>
 
         <StatsOverview statistics={testResults.statistics} />

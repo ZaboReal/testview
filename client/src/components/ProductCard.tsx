@@ -34,7 +34,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               {product.name}
             </h3>
             <p className="text-sm text-muted-foreground" data-testid={`text-brand-${product.id}`}>
-              {product.brand} · {product.retailer}
+              {String(product.brand || 'Unknown')} · {String(product.retailer || 'Unknown')}
             </p>
           </div>
 
